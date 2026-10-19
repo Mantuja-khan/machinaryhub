@@ -79,20 +79,23 @@ const ProductDetail = () => {
         queryKey: ["product", slug],
         queryFn: async () => {
             if (!slug) return null;
+            const fallback = allProducts.find((p) => p.slug === slug);
+            if (fallback) {
+                return fallback;
+            }
             try {
                 const data = await api.getProduct(slug);
                 if (data) {
-                    const fallback = allProducts.find((p) => p.slug === slug);
                     return {
                         ...data,
-                        image_url: data.image_url || fallback?.image_url,
-                        images: (data.images && data.images.length > 0) ? data.images : (fallback?.images || [data.image_url || fallback?.image_url].filter(Boolean))
+                        image_url: data.image_url || (data.images && data.images[0]) || null,
+                        images: (data.images && data.images.length > 0) ? data.images : [data.image_url].filter(Boolean)
                     };
                 }
             } catch (err) {
                 console.warn("API product error, falling back:", err);
             }
-            return allProducts.find((p) => p.slug === slug) || null;
+            return null;
         },
         enabled: !!slug,
     });

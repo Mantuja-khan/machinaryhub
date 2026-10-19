@@ -31,8 +31,8 @@ const ProductDetailModal = ({ product, onClose, onInquiry, onBuy }: Props) => (
 
       {/* Image */}
       <div className="aspect-video bg-muted flex items-center justify-center">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+        {(product.image_url || product.images?.[0]) ? (
+          <img src={product.image_url || product.images?.[0]} alt={product.name} className="w-full h-full object-cover" />
         ) : (
           <Package className="h-20 w-20 text-muted-foreground/30" />
         )}

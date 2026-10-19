@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 
+import { allProducts, featuredProducts, type Product as DemoProduct } from "@/data/products";
+
 export interface Product {
   id: string;
   name: string;
@@ -10,43 +12,48 @@ export interface Product {
   specifications: Record<string, string>;
   price: number | null;
   image_url: string | null;
+  images?: string[];
   stock: number;
   featured: boolean;
-
-  // 🔥 Added (already backend me add kiya tha)
   rating?: number;
   numReviews?: number;
-
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const fetchProducts = async (): Promise<Product[]> => {
-  const data = await api.getProducts();
-  return data.map((p: any) => ({
-    ...p,
-    category: p.category as "Trading" | "Manufacturing",
-    specifications: p.specifications ?? {},
-  }));
-};
+const mapDemoToHookProduct = (p: DemoProduct): Product => ({
+  id: p.id,
+  name: p.name,
+  slug: p.slug,
+  category: p.category,
+  description: p.description,
+  specifications: p.specifications,
+  price: p.price ?? null,
+  image_url: p.image_url || (p.images && p.images[0]) || null,
+  images: p.images || [p.image_url].filter(Boolean) as string[],
+  stock: p.stock,
+  featured: p.featured,
+  rating: p.rating ?? 4.8,
+  numReviews: p.numReviews ?? 15,
+  created_at: p.created_at || new Date().toISOString(),
+  updated_at: p.updated_at || new Date().toISOString(),
+});
+
+const defaultDemoProducts: Product[] = allProducts.map(mapDemoToHookProduct);
+const defaultFeaturedDemoProducts: Product[] = featuredProducts.map(mapDemoToHookProduct);
 
 export const useProducts = () =>
-  useQuery({ queryKey: ["products"], queryFn: fetchProducts });
+  useQuery({
+    queryKey: ["products"],
+    queryFn: async () => defaultDemoProducts,
+    initialData: defaultDemoProducts,
+  });
 
 export const useFeaturedProducts = () =>
   useQuery({
     queryKey: ["products", "featured"],
-    queryFn: async () => {
-      const data = await api.getProducts();
-      return data
-        .filter((p: any) => p.featured)
-        .slice(0, 6)
-        .map((p: any) => ({
-          ...p,
-          category: p.category as "Trading" | "Manufacturing",
-          specifications: p.specifications ?? {},
-        }));
-    },
+    queryFn: async () => defaultFeaturedDemoProducts,
+    initialData: defaultFeaturedDemoProducts,
   });
 
 
